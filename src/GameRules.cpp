@@ -1,15 +1,22 @@
+#include <iostream>
 #include "GameRules.h"
 #include "Board.h"
 
-bool GameRules::can_move(const Piece &piece, const Board &board, const string &from, const string &to)
+bool GameRules::can_move(Piece &piece, const Board &board, const string &from, const string &to)
 {
     auto can_piece_move = [&board](const string &dest)
     {
         if (!board.is_valid_square(dest))
+        {
+            std::cout << "Occupied" << std::endl;
             return false;
+        }
 
         if (board.is_square_occoupied(dest))
+        {
+            std::cout << "Invalid square" << std::endl;
             return false;
+        }
 
         return true;
     };
@@ -29,6 +36,5 @@ bool GameRules::can_move(const Piece &piece, const Board &board, const string &f
 
 //         return true;
 //     };
-
 
 // }

@@ -103,6 +103,9 @@ bool Board::move(const string &from, const string &to)
         return false;
     }
 
+    if (from == to)
+        return false;
+
     if (is_square_occoupied(to))
     {
         std::cout << "Occupied" << std::endl;

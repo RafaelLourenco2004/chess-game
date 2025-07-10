@@ -6,7 +6,7 @@ Pawn::Pawn(char type, enum Color colour) : Piece(type, colour), has_moved{false}
 {
 }
 
-bool Pawn::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move) const
+bool Pawn::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
 {
     char column = from.at(0);
     int row = from.at(1) - '0';
@@ -19,7 +19,10 @@ bool Pawn::can_move(const string &from, const string &to, std::function<bool(str
     {
         pos = string(1, column) + std::to_string(row + 2);
         if (can_piece_move(pos) && pos == to)
+        {
+            has_moved = true;
             return true;
+        }
     }
 
     return false;

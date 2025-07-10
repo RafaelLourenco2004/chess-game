@@ -27,7 +27,7 @@ std::vector<string> Knight::get_possible_moves(const string &square, std::functi
     return possible_moves;
 }
 
-bool Knight::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move) const
+bool Knight::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
 {
     std::vector<string> moves = get_possible_moves(from, can_piece_move);
     for (string move : moves)

@@ -1,4 +1,5 @@
 #include <string>
+#include <cmath>
 #include "Bishop.h"
 
 Bishop::Bishop(char type, enum Color colour) : Piece(type, colour)
@@ -11,7 +12,9 @@ bool Bishop::can_move(const string &from, const string &to, std::function<bool(s
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';
 
-    string pos = string(1, static_cast<char>(origin_col + 1)) + std::to_string(origin_row + 1);
+    origin_row += offset.first;
+    origin_col += offset.second;
+    string pos = string(1, static_cast<char>(origin_col)) + std::to_string(origin_row);
     while (can_piece_move(pos))
     {
         if (pos == to)
@@ -23,7 +26,7 @@ bool Bishop::can_move(const string &from, const string &to, std::function<bool(s
     return false;
 }
 
-bool Bishop::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move) const
+bool Bishop::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
 {
     char origin_col = from.at(0);
     char origin_row = from.at(1);
@@ -34,6 +37,9 @@ bool Bishop::can_move(const string &from, const string &to, std::function<bool(s
         return false;
 
     if (origin_row == dest_row)
+        return false;
+
+    if (std::abs(dest_row - origin_row) != std::abs(dest_col - origin_col))
         return false;
 
     int row_offset = dest_row > origin_row ? 1 : -1;
