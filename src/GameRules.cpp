@@ -24,17 +24,16 @@ bool GameRules::can_move(Piece &piece, const Board &board, const string &from, c
     return piece.can_move(from, to, can_piece_move);
 }
 
-// bool GameRules::can_capture(const Piece &piece, const Board &board, const std::string &from, const std::string &to)
-// {
-//     auto can_piece_capture = [&board](const string &dest)
-//     {
-//         if (!board.is_valid_square(dest))
-//             return false;
+bool GameRules::can_capture(const Piece &piece, const Board &board, const std::string &from, const std::string &to)
+{
+    auto can_piece_capture = [&board](const string &origin, const string &dest)
+    {
+        if (!board.is_valid_square(dest) || !board.is_valid_square(origin))
+            return false;
 
-//         if (board.is_square_occoupied(dest))
-//             return false;
+        if (origin != dest && board.is_square_occoupied(dest))
+            return false;
 
-//         return true;
-//     };
-
-// }
+        return true;
+    };
+}

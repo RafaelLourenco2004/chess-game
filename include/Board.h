@@ -27,7 +27,11 @@ private:
     void set_piece(string pos, char type, enum Color colour);
     void set_pieces();
 
-    std::pair<int, int> get_board_location(const string &square) const;    
+    template <typename T>
+    bool is_type(const unique_ptr<Piece> &piece);
+
+    void move_on_board(const string &from, const string &to);
+    std::pair<int, int> get_board_location(const string &square) const;
 
 public:
     Board();
@@ -35,5 +39,8 @@ public:
     bool is_valid_square(const string &square) const;
     bool is_square_occoupied(const string &square) const;
     bool move(const string &from, const string &to);
+    bool move_piece(const string &from, const string &to);
+    bool castle(unique_ptr<Piece> &piece_a, unique_ptr<Piece> &piece_b, const string &from, const string &to);
+    bool take(const string &from, const string &to);
     void display();
 };

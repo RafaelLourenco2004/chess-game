@@ -70,16 +70,29 @@ Board::Board()
 
 bool Board::is_valid_square(const string &square) const
 {
-    int column = static_cast<int>(square.at(0));
-    int row = square.at(1) - '0';
+    char column = square.at(0);
+    char row = square.at(1);
 
-    if (column < static_cast<int>(COLUMNS.front()) || column > static_cast<int>(COLUMNS.back()))
+    if (column < COLUMNS.front() || column > COLUMNS.back())
         return false;
 
-    if (row < 1 || row > 8)
+    if (row < '1' || row > '8')
         return false;
 
     return true;
+}
+
+void Board::move_on_board(const string &from, const string &to)
+{
+    std::pair<int, int> from_loc = get_board_location(from);
+    std::pair<int, int> to_loc = get_board_location(to);
+
+    board[from_loc.first][from_loc.second] = false;
+    board[to_loc.first][to_loc.second] = true;
+
+    auto piece = pieces.find(from);
+    pieces[to] = std::move(piece->second);
+    pieces.erase(piece);
 }
 
 std::pair<int, int> Board::get_board_location(const string &square) const
@@ -95,6 +108,81 @@ bool Board::is_square_occoupied(const string &square) const
     return board[coord.first][coord.second];
 }
 
+template <typename T>
+bool Board::is_type(const unique_ptr<Piece> &piece)
+{
+    return dynamic_cast<T *>(piece.get()) != nullptr;
+}
+
+bool Board::move_piece(const string &from, const string &to)
+{
+    if (!GameRules::can_move((*pieces[from].get()), *this, from, to))
+    {
+        std::cout << "Can not move" << std::endl;
+        return false;
+    }
+
+    move_on_board(from, to);
+    return true;
+}
+
+bool Board::castle(unique_ptr<Piece> &piece_a, unique_ptr<Piece> &piece_b, const string &from, const string &to)
+{
+    King *king = nullptr;
+    Rook *rook = nullptr;
+    string king_pos;
+    string rook_pos;
+    if (is_type<King>(piece_a))
+    {
+        king = dynamic_cast<King *>(piece_a.get());
+        rook = dynamic_cast<Rook *>(piece_b.get());
+        king_pos = from;
+        rook_pos = to;
+    }
+    else
+    {
+        king = dynamic_cast<King *>(piece_b.get());
+        rook = dynamic_cast<Rook *>(piece_a.get());
+        king_pos = to;
+        rook_pos = from;
+    }
+
+    if (king->has_king_moved() || rook->has_rook_moved())
+    {
+        return false;
+    }
+
+    int king_col = king_pos.at(0) - 'A';
+    int rook_col = rook_pos.at(0) - 'A';
+    int row = (king_pos.at(1) - '0') - 1;
+
+    int offset = rook_col > king_col ? 1 : -1;
+    for (int col = king_col + offset; col != rook_col; col += offset)
+    {
+        if (board[row][col])
+        {
+            return false;
+        }
+    }
+
+    if (offset == 1)
+    {
+        move_on_board(king_pos, string(1, static_cast<char>('A' + king_col + 2)) + std::to_string(row + 1));
+        move_on_board(rook_pos, string(1, static_cast<char>('A' + king_col + 1)) + std::to_string(row + 1));
+    }
+    else
+    {
+        move_on_board(king_pos, string(1, static_cast<char>('A' + king_col - 2)) + std::to_string(row + 1));
+        move_on_board(rook_pos, string(1, static_cast<char>('A' + king_col - 1)) + std::to_string(row + 1));
+    }
+    return true;
+}
+
+bool Board::take(const string &from, const string &to)
+{
+    return true;
+}
+
 bool Board::move(const string &from, const string &to)
 {
     if (!is_valid_square(from) || !is_valid_square(to))
@@ -106,34 +194,26 @@ bool Board::move(const string &from, const string &to)
     if (from == to)
         return false;
 
-    if (is_square_occoupied(to))
+    auto from_piece = pieces.find(from);
+    if (from_piece == pieces.end())
+        return false;
+
+    auto to_piece = pieces.find(to);
+    if (to_piece == pieces.end())
+        return move_piece(from, to);
+
+    unique_ptr<Piece> &piece_a = from_piece->second;
+    unique_ptr<Piece> &piece_b = to_piece->second;
+    if (piece_a->get_colour() == piece_b->get_colour())
     {
-        std::cout << "Occupied" << std::endl;
+        if ((is_type<Rook>(piece_a) && is_type<King>(piece_b)) || (is_type<Rook>(piece_b) && is_type<King>(piece_a)))
+        {
+            return castle(piece_a, piece_b, from, to);
+        }
         return false;
     }
 
-    if (pieces.find(from) == pieces.end())
-    {
-        std::cout << "Not Found" << std::endl;
-        return false;
-    }
-
-    if (!GameRules::can_move((*pieces[from].get()), *this, from, to))
-    {
-        std::cout << "Can not move" << std::endl;
-        return false;
-    }
-
-    std::pair<int, int> from_loc = get_board_location(from);
-    std::pair<int, int> to_loc = get_board_location(to);
-
-    board[from_loc.first][from_loc.second] = false;
-    board[to_loc.first][to_loc.second] = true;
-
-    auto piece = pieces.find(from);
-    pieces[to] = std::move(piece->second);
-    pieces.erase(piece);
-    return true;
+    return take(from, to);
 }
 
 void Board::display()
