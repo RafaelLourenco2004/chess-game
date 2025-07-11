@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <ostream>
 #include <functional>
 
@@ -23,7 +24,7 @@ public:
     Piece() = default;
     Piece(char type, enum Color colour) : type{type}, colour{colour} {};
 
-    virtual bool can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move) = 0;
+    virtual bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) = 0;
     virtual ~Piece() = default;
 
     char get_type() const

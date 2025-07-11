@@ -6,7 +6,7 @@ Queen::Queen(char type, enum Color colour) : Piece(type, colour)
 {
 }
 
-bool Queen::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move,
+bool Queen::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move,
                      std::pair<int, int> offset) const
 {
     int origin_col = static_cast<int>(from.at(0));
@@ -15,7 +15,7 @@ bool Queen::can_move(const string &from, const string &to, std::function<bool(st
     origin_row += offset.first;
     origin_col += offset.second;
     string pos = string(1, static_cast<char>(origin_col)) + std::to_string(origin_row);
-    while (can_piece_move(pos))
+    while (can_piece_move(pos, to))
     {
         if (pos == to)
             return true;
@@ -26,7 +26,7 @@ bool Queen::can_move(const string &from, const string &to, std::function<bool(st
     return false;
 }
 
-bool Queen::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move,
+bool Queen::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move,
                      bool horizontal, int offset) const
 {
     int origin_col = static_cast<int>(from.at(0));
@@ -36,7 +36,7 @@ bool Queen::can_move(const string &from, const string &to, std::function<bool(st
     string pos_row = horizontal ? std::to_string(origin_row) : std::to_string(origin_row + offset);
     string pos = pos_col + pos_row;
 
-    while (can_piece_move(pos))
+    while (can_piece_move(pos, to))
     {
         if (pos == to)
             return true;
@@ -55,7 +55,7 @@ bool Queen::can_move(const string &from, const string &to, std::function<bool(st
     return false;
 }
 
-bool Queen::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
+bool Queen::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';

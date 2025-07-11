@@ -5,7 +5,7 @@ Rook::Rook(char type, enum Color colour) : Piece(type, colour), has_moved{false}
 {
 }
 
-bool Rook::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move,
+bool Rook::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move,
                     bool horizontal, int offset)
 {
     int origin_col = static_cast<int>(from.at(0));
@@ -15,7 +15,7 @@ bool Rook::can_move(const string &from, const string &to, std::function<bool(str
     string pos_row = horizontal ? std::to_string(origin_row) : std::to_string(origin_row + offset);
     string pos = pos_col + pos_row;
 
-    while (can_piece_move(pos))
+    while (can_piece_move(pos, to))
     {
         if (pos == to)
         {
@@ -37,7 +37,7 @@ bool Rook::can_move(const string &from, const string &to, std::function<bool(str
     return false;
 }
 
-bool Rook::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
+bool Rook::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';

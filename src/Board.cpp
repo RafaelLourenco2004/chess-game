@@ -180,6 +180,28 @@ bool Board::castle(unique_ptr<Piece> &piece_a, unique_ptr<Piece> &piece_b, const
 
 bool Board::take(const string &from, const string &to)
 {
+    // if (!GameRules::can_move((*pieces[from].get()), *this, from, to))
+    // {
+    //     std::cout << "Can not move" << std::endl;
+    //     return false;
+    // }
+    if (!GameRules::can_capture(pieces[from].get(), *this, from, to))
+    {
+        std::cout << "Can not move" << std::endl;
+        return false;
+    }
+
+    std::pair<int, int> from_loc = get_board_location(from);
+    std::pair<int, int> to_loc = get_board_location(to);
+
+    board[from_loc.first][from_loc.second] = false;
+    board[to_loc.first][to_loc.second] = true;
+
+    auto taken_piece = pieces.find(to);
+    pieces.erase(taken_piece);
+    auto taker = pieces.find(from);
+    pieces[to] = std::move(taker->second);
+    pieces.erase(taker);
     return true;
 }
 

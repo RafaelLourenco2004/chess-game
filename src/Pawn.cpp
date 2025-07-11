@@ -1,38 +1,73 @@
 #include <string>
-
+#include <cmath>
 #include "Pawn.h"
+
+using std::abs;
 
 Pawn::Pawn(char type, enum Color colour) : Piece(type, colour), has_moved{false}
 {
 }
 
-bool Pawn::can_move(const string &from, const string &to, std::function<bool(string)> can_piece_move)
+bool Pawn::can_push(int offset)
 {
-    char column = from.at(0);
+    if (colour == WHITE && offset < 0)
+        return false;
 
+    if (colour == BLACK && offset > 0)
+        return false;
+
+    return true;
+}
+
+bool Pawn::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+{
+    int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';
+    int dest_col = static_cast<int>(to.at(0));
     int dest_row = to.at(1) - '0';
 
-    int offset = dest_row > origin_row ? 1 : -1;
+    if (dest_col != origin_col)
+        return false;
 
-    string pos = string(1, column) + std::to_string(origin_row + offset);
-    if (can_piece_move(pos) && pos == to)
-        return true;
+    int offset = dest_row - origin_row;
 
-    if (!has_moved)
+    if (abs(offset) == 2)
     {
-        pos = string(1, column) + std::to_string(origin_row + (2 * offset));
-        if (can_piece_move(pos) && pos == to)
-        {
-            has_moved = true;
-            return true;
-        }
+        if (has_moved)
+            return false;
+
+        if (!can_push(offset))
+            return false;
+
+        has_moved = true;
+        return true;
+    }
+
+    if (abs(offset) == 1)
+    {
+        if (!can_push(offset))
+            return false;
+
+        has_moved = true;
+        return true;
     }
 
     return false;
 }
 
-bool Pawn::can_capture(const string &from, const string &to, std::function<bool(string)> can_piece_move)
+bool Pawn::can_capture(const string &from, const string &to)
 {
-    
+    int origin_col = static_cast<int>(from.at(0));
+    int origin_row = from.at(1) - '0';
+    int dest_col = static_cast<int>(to.at(0));
+    int dest_row = to.at(1) - '0';
+
+    if (abs(dest_row - origin_row) != 1 || abs(dest_col - origin_col) != 1)
+        return false;
+
+    int offset = dest_row - origin_row;
+    if (!can_push(offset))
+        return false;
+
+    return true;
 }
