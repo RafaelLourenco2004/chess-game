@@ -1,7 +1,13 @@
 #include <iostream>
+#include <string>
+
 #include "GameRules.h"
 #include "Pawn.h"
 #include "Board.h"
+
+bool GameRules::is_in_check(Piece &piece, const string &to, const string &from, Color turn)
+{
+}
 
 bool GameRules::can_move(Piece &piece, const Board &board, const string &from, const string &to)
 {

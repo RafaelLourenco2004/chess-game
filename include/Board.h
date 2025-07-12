@@ -7,6 +7,7 @@
 
 #include "Piece.h"
 
+class GameRules;
 class Piece;
 
 using std::make_unique;
@@ -19,6 +20,7 @@ private:
     const string BACK_ROW = "RHBQKBHR";
     const string COLUMNS = "ABCDEFGH";
 
+    GameRules rules;
     std::array<std::array<bool, 8>, 8> board = {};
     std::map<string, unique_ptr<Piece>> pieces;
 

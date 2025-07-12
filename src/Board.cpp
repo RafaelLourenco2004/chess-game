@@ -62,7 +62,7 @@ void Board::set_pieces()
     set_row(7, BLACK, false);
 }
 
-Board::Board()
+Board::Board(): rules{GameRules{}}
 {
     board_init();
     set_pieces();
@@ -116,7 +116,7 @@ bool Board::is_type(const unique_ptr<Piece> &piece)
 
 bool Board::move_piece(const string &from, const string &to)
 {
-    if (!GameRules::can_move((*pieces[from].get()), *this, from, to))
+    if (!rules.can_move((*pieces[from].get()), *this, from, to))
     {
         std::cout << "Can not move" << std::endl;
         return false;
@@ -180,12 +180,7 @@ bool Board::castle(unique_ptr<Piece> &piece_a, unique_ptr<Piece> &piece_b, const
 
 bool Board::take(const string &from, const string &to)
 {
-    // if (!GameRules::can_move((*pieces[from].get()), *this, from, to))
-    // {
-    //     std::cout << "Can not move" << std::endl;
-    //     return false;
-    // }
-    if (!GameRules::can_capture(pieces[from].get(), *this, from, to))
+    if (rules.can_capture(pieces[from].get(), *this, from, to))
     {
         std::cout << "Can not move" << std::endl;
         return false;
