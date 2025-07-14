@@ -3,24 +3,20 @@
 #include "GameRules.h"
 #include "Pawn.h"
 #include "Board.h"
-#include "King.h"
-#include "Rook.h"
 
-// bool GameRules::is_in_check(Piece &piece, const string &to, const string &from, Color turn)
-// {
-//     return true;
-// }
+using std::pair;
+using std::vector;
 
-bool GameRules::can_move(Piece &piece, const string &from, const string &to)
+GameRules::GameRules(Board &board) : white_checked{false}, black_checked{false}, board{board}
 {
-    auto can_piece_move = [&](const string &origin, const string &dest)
+    can_piece_move = [this](const string &origin, const string &dest)
     {
-        if (!board.is_valid_square(dest) || !board.is_valid_square(origin))
+        if (!this->board.is_valid_square(dest) || !this->board.is_valid_square(origin))
         {
             return false;
         }
 
-        if (board.is_square_occoupied(origin))
+        if (this->board.is_square_occoupied(origin))
         {
             if (origin == dest)
                 return true;
@@ -29,41 +25,62 @@ bool GameRules::can_move(Piece &piece, const string &from, const string &to)
 
         return true;
     };
-
-    return piece.can_move(from, to, can_piece_move);
 }
 
-bool GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to)
+bool GameRules::is_in_check(Color color)
 {
+    Color enemy = color == WHITE ? BLACK : WHITE;
+
+    string king_square = board.get_king_location(color);
+    vector<pair<string, Piece *>> pieces = board.get_pieces(enemy);
+    for (const auto &piece : pieces)
+    {
+        if (can_capture(piece.second, piece.first, king_square, false))
+        {
+            std::cout << "CHECK" << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool GameRules::can_move(const Piece &piece, const string &from, const string &to, bool simulate_check)
+{
+    bool is_valid = piece.can_move(from, to, can_piece_move);
+    if (!is_valid)
+        return false;
+
+    board.move(from, to);
+    bool is_check = is_in_check(piece.get_colour());
+    board.undo();
+
+    return !is_check;
+}
+
+bool GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to, bool simulate_check)
+{
+    bool is_valid;
     Pawn *pawn = dynamic_cast<Pawn *>(piece);
     if (pawn != nullptr)
-        return pawn->can_capture(from, to);
+        is_valid = pawn->can_capture(from, to);
+    else
+        is_valid = piece->can_move(from, to, can_piece_move);
 
-    return can_move(*piece, from, to);
+    if (!is_valid)
+        return false;
+
+    if (!simulate_check)
+        return is_valid;
+
+    board.take(from, to);
+    bool is_check = is_in_check(piece->get_colour());
+    board.undo();
+    return !is_check;
 }
 
-bool GameRules::can_castle(Piece *piece_a, Piece *piece_b, const string &from, const string &to)
+bool GameRules::can_castle(const King *king, const Rook *rook, const string &king_pos, const string &rook_pos)
 {
-    King *king = nullptr;
-    Rook *rook = nullptr;
-    string king_pos;
-    string rook_pos;
-    if (board.is_type<King>(piece_a))
-    {
-        king = dynamic_cast<King *>(piece_a);
-        rook = dynamic_cast<Rook *>(piece_b);
-        king_pos = from;
-        rook_pos = to;
-    }
-    else
-    {
-        king = dynamic_cast<King *>(piece_b);
-        rook = dynamic_cast<Rook *>(piece_a);
-        king_pos = to;
-        rook_pos = from;
-    }
-
-    if (king->has_king_moved() || rook->has_rook_moved())
+    if (king->has_moved() || rook->has_moved())
     {
         return false;
     }

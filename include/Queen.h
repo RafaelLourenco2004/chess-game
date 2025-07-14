@@ -15,7 +15,7 @@ public:
     Queen() = default;
     Queen(char type, enum Color colour);
 
-    bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) override;
+    bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const override;
 
     ~Queen() override = default;
 };

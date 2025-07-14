@@ -11,8 +11,9 @@ bool GameController::move(const string &from, const string &to)
         return false;
 
     if (!board.exists(from))
+    {
         return false;
-
+    }
     if (board.exists(to))
     {
         Piece *a = board.get_piece(from);
@@ -29,9 +30,28 @@ bool GameController::move(const string &from, const string &to)
         {
             if ((board.is_type<King>(a) && board.is_type<Rook>(b)) || (board.is_type<King>(b) && board.is_type<Rook>(a)))
             {
-                if (rules.can_castle(a, b, from, to))
+                King *king;
+                Rook *rook;
+                string king_pos;
+                string rook_pos;
+                if (board.is_type<King>(a))
                 {
-                    board.castle(from, to);
+                    king = dynamic_cast<King *>(a);
+                    rook = dynamic_cast<Rook *>(b);
+                    king_pos = from;
+                    rook_pos = to;
+                }
+                else
+                {
+                    king = dynamic_cast<King *>(b);
+                    rook = dynamic_cast<Rook *>(a);
+                    king_pos = to;
+                    rook_pos = from;
+                }
+
+                if (rules.can_castle(king, rook, king_pos, rook_pos))
+                {
+                    board.castle(king, rook, king_pos, rook_pos);
                     return true;
                 }
             }

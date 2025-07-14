@@ -1,12 +1,12 @@
 #include <string>
 #include "Rook.h"
 
-Rook::Rook(char type, enum Color colour) : Piece(type, colour), has_moved{false}
+Rook::Rook(char type, enum Color colour) : Piece(type, colour), StatefulPiece()
 {
 }
 
 bool Rook::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move,
-                    bool horizontal, int offset)
+                    bool horizontal, int offset) const
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';
@@ -19,7 +19,6 @@ bool Rook::can_move(const string &from, const string &to, std::function<bool(str
     {
         if (pos == to)
         {
-            has_moved = true;
             return true;
         }
 
@@ -37,7 +36,7 @@ bool Rook::can_move(const string &from, const string &to, std::function<bool(str
     return false;
 }
 
-bool Rook::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+bool Rook::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';

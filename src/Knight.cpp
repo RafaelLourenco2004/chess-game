@@ -8,7 +8,7 @@ Knight::Knight(char type, enum Color colour) : Piece(type, colour)
 {
 }
 
-bool Knight::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+bool Knight::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';

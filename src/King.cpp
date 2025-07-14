@@ -1,10 +1,10 @@
 #include "King.h"
 
-King::King(char type, enum Color colour) : Piece(type, colour), has_moved{false}
+King::King(char type, enum Color colour) : Piece(type, colour), StatefulPiece()
 {
 }
 
-bool King::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+bool King::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';
@@ -16,7 +16,6 @@ bool King::can_move(const string &from, const string &to, std::function<bool(str
 
     if (can_piece_move(to, to))
     {
-        has_moved = true;
         return true;
     }
     return false;

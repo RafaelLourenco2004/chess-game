@@ -4,11 +4,11 @@
 
 using std::abs;
 
-Pawn::Pawn(char type, enum Color colour) : Piece(type, colour), has_moved{false}
+Pawn::Pawn(char type, enum Color colour) : Piece(type, colour), StatefulPiece()
 {
 }
 
-bool Pawn::can_push(int offset)
+bool Pawn::can_push(int offset) const
 {
     if (colour == WHITE && offset < 0)
         return false;
@@ -19,7 +19,7 @@ bool Pawn::can_push(int offset)
     return true;
 }
 
-bool Pawn::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+bool Pawn::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const
 {
     int origin_col = static_cast<int>(from.at(0));
     int origin_row = from.at(1) - '0';
@@ -33,13 +33,12 @@ bool Pawn::can_move(const string &from, const string &to, std::function<bool(str
 
     if (abs(offset) == 2)
     {
-        if (has_moved)
+        if (has_moved())
             return false;
 
         if (!can_push(offset))
             return false;
 
-        has_moved = true;
         return true;
     }
 
@@ -48,7 +47,6 @@ bool Pawn::can_move(const string &from, const string &to, std::function<bool(str
         if (!can_push(offset))
             return false;
 
-        has_moved = true;
         return true;
     }
 

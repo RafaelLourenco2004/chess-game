@@ -1,27 +1,15 @@
 #pragma once
 
 #include "Piece.h"
+#include "StatefulPiece.h"
 
-class King : public Piece
+class King : public Piece, public StatefulPiece
 {
-private:
-    bool has_moved;
-
 public:
     King() = default;
     King(char type, enum Color colour);
 
-    bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) override;
-
-    bool has_king_moved()
-    {
-        return has_moved;
-    }
-
-    void moved()
-    {
-        has_moved = true;
-    }
+    bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const override;
     
     ~King() override = default;
 };

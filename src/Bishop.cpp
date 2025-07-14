@@ -26,7 +26,7 @@ bool Bishop::can_move(const string &from, const string &to, std::function<bool(s
     return false;
 }
 
-bool Bishop::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move)
+bool Bishop::can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) const
 {
     char origin_col = from.at(0);
     char origin_row = from.at(1);
