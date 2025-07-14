@@ -2,7 +2,6 @@
 
 #include "Pieces.h"
 #include "Board.h"
-#include "GameRules.h"
 
 void Board::board_init()
 {
@@ -62,7 +61,7 @@ void Board::set_pieces()
     set_row(7, BLACK, false);
 }
 
-Board::Board(): rules{GameRules{}}
+Board::Board()
 {
     board_init();
     set_pieces();
@@ -82,19 +81,6 @@ bool Board::is_valid_square(const string &square) const
     return true;
 }
 
-void Board::move_on_board(const string &from, const string &to)
-{
-    std::pair<int, int> from_loc = get_board_location(from);
-    std::pair<int, int> to_loc = get_board_location(to);
-
-    board[from_loc.first][from_loc.second] = false;
-    board[to_loc.first][to_loc.second] = true;
-
-    auto piece = pieces.find(from);
-    pieces[to] = std::move(piece->second);
-    pieces.erase(piece);
-}
-
 std::pair<int, int> Board::get_board_location(const string &square) const
 {
     int col = COLUMNS.find(square.at(0));
@@ -108,84 +94,31 @@ bool Board::is_square_occoupied(const string &square) const
     return board[coord.first][coord.second];
 }
 
-template <typename T>
-bool Board::is_type(const unique_ptr<Piece> &piece)
+bool Board::exists(const string &square) const
 {
-    return dynamic_cast<T *>(piece.get()) != nullptr;
+    return pieces.find(square) != pieces.end();
 }
 
-bool Board::move_piece(const string &from, const string &to)
+Piece *Board::get_piece(const string &square)
 {
-    if (!rules.can_move((*pieces[from].get()), *this, from, to))
-    {
-        std::cout << "Can not move" << std::endl;
-        return false;
-    }
-
-    move_on_board(from, to);
-    return true;
+    return pieces[square].get();
 }
 
-bool Board::castle(unique_ptr<Piece> &piece_a, unique_ptr<Piece> &piece_b, const string &from, const string &to)
+void Board::move(const string &from, const string &to)
 {
-    King *king = nullptr;
-    Rook *rook = nullptr;
-    string king_pos;
-    string rook_pos;
-    if (is_type<King>(piece_a))
-    {
-        king = dynamic_cast<King *>(piece_a.get());
-        rook = dynamic_cast<Rook *>(piece_b.get());
-        king_pos = from;
-        rook_pos = to;
-    }
-    else
-    {
-        king = dynamic_cast<King *>(piece_b.get());
-        rook = dynamic_cast<Rook *>(piece_a.get());
-        king_pos = to;
-        rook_pos = from;
-    }
+    std::pair<int, int> from_loc = get_board_location(from);
+    std::pair<int, int> to_loc = get_board_location(to);
 
-    if (king->has_king_moved() || rook->has_rook_moved())
-    {
-        return false;
-    }
+    board[from_loc.first][from_loc.second] = false;
+    board[to_loc.first][to_loc.second] = true;
 
-    int king_col = king_pos.at(0) - 'A';
-    int rook_col = rook_pos.at(0) - 'A';
-    int row = (king_pos.at(1) - '0') - 1;
-
-    int offset = rook_col > king_col ? 1 : -1;
-    for (int col = king_col + offset; col != rook_col; col += offset)
-    {
-        if (board[row][col])
-        {
-            return false;
-        }
-    }
-
-    if (offset == 1)
-    {
-        move_on_board(king_pos, string(1, static_cast<char>('A' + king_col + 2)) + std::to_string(row + 1));
-        move_on_board(rook_pos, string(1, static_cast<char>('A' + king_col + 1)) + std::to_string(row + 1));
-    }
-    else
-    {
-        move_on_board(king_pos, string(1, static_cast<char>('A' + king_col - 2)) + std::to_string(row + 1));
-        move_on_board(rook_pos, string(1, static_cast<char>('A' + king_col - 1)) + std::to_string(row + 1));
-    }
-    return true;
+    auto piece = pieces.find(from);
+    pieces[to] = std::move(piece->second);
+    pieces.erase(piece);
 }
 
-bool Board::take(const string &from, const string &to)
+void Board::take(const string &from, const string &to)
 {
-    if (rules.can_capture(pieces[from].get(), *this, from, to))
-    {
-        std::cout << "Can not move" << std::endl;
-        return false;
-    }
-
     std::pair<int, int> from_loc = get_board_location(from);
     std::pair<int, int> to_loc = get_board_location(to);
 
@@ -197,40 +130,53 @@ bool Board::take(const string &from, const string &to)
     auto taker = pieces.find(from);
     pieces[to] = std::move(taker->second);
     pieces.erase(taker);
-    return true;
 }
 
-bool Board::move(const string &from, const string &to)
+void Board::castle(const string &from, const string &to)
 {
-    if (!is_valid_square(from) || !is_valid_square(to))
+    string king_pos;
+    string rook_pos;
+    if (from == "E1" || from == "E8")
     {
-        std::cout << "Invalid Square" << std::endl;
-        return false;
+        king_pos = from;
+        rook_pos = to;
+    }
+    else
+    {
+        king_pos = to;
+        rook_pos = from;
     }
 
-    if (from == to)
-        return false;
+    int king_col = static_cast<int>(king_pos.at(0));
+    int rook_col = static_cast<int>(rook_pos.at(0));
 
-    auto from_piece = pieces.find(from);
-    if (from_piece == pieces.end())
-        return false;
+    int offset = rook_col - king_col;
 
-    auto to_piece = pieces.find(to);
-    if (to_piece == pieces.end())
-        return move_piece(from, to);
+    int row = king_pos.at(1) - '0';
 
-    unique_ptr<Piece> &piece_a = from_piece->second;
-    unique_ptr<Piece> &piece_b = to_piece->second;
-    if (piece_a->get_colour() == piece_b->get_colour())
+    string new_king_pos;
+    string new_rook_pos;
+    if (offset > 0)
     {
-        if ((is_type<Rook>(piece_a) && is_type<King>(piece_b)) || (is_type<Rook>(piece_b) && is_type<King>(piece_a)))
-        {
-            return castle(piece_a, piece_b, from, to);
-        }
-        return false;
+        new_king_pos = string(1, static_cast<char>(king_col + 2)) + std::to_string(row);
+        new_rook_pos = string(1, static_cast<char>(king_col + 1)) + std::to_string(row);
+        move(king_pos, new_king_pos);
+        move(rook_pos, new_rook_pos);
+    }
+    else
+    {
+        new_king_pos = string(1, static_cast<char>(king_col - 2)) + std::to_string(row);
+        new_rook_pos = string(1, static_cast<char>(king_col - 1)) + std::to_string(row);
+        move(king_pos, new_king_pos);
+        move(rook_pos, new_rook_pos);
     }
 
-    return take(from, to);
+    Piece *king_p = get_piece(new_king_pos);
+    Piece *rook_p = get_piece(new_rook_pos);
+    King *king = dynamic_cast<King *>(king_p);
+    Rook *rook = dynamic_cast<Rook *>(rook_p);
+    king->moved();
+    rook->moved();
 }
 
 void Board::display()

@@ -1,33 +1,30 @@
 #include <iostream>
 
-#include "Board.h"
+#include "GameController.h"
 
 using std::cin;
 using std::cout;
 using std::endl;
 
-bool move(Board &board)
+bool move(GameController &controller)
 {
     string from, to;
     cout << "Move: ";
     cin >> from >> to;
 
-    return board.move(from, to);
+    return controller.move(from, to);
 }
 
 int main()
 {
-    Board board{};
+    GameController controller;
 
-    board.display();
-
-    while (move(board))
+    controller.display();
+    while (move(controller))
     {
-        board.display();
+        controller.display();
     }
     cout << "Invalid movement" << endl;
-
-    board.display();
 
     return 0;
 }

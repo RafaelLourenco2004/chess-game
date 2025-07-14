@@ -13,6 +13,7 @@ set(SRCS
     src/Queen.cpp
     src/Rook.cpp
     src/GameRules.cpp
+    src/GameController.cpp
 )
 
 

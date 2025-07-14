@@ -19,6 +19,11 @@ public:
         return has_moved;
     }
 
+    void moved()
+    {
+        has_moved = true;
+    }
+
     bool can_move(const string &from, const string &to, std::function<bool(string, string)> can_piece_move) override;
 
     ~Rook() override = default;

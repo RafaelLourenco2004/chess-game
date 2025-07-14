@@ -17,5 +17,11 @@ public:
     {
         return has_moved;
     }
+
+    void moved()
+    {
+        has_moved = true;
+    }
+    
     ~King() override = default;
 };
