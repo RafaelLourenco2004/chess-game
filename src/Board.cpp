@@ -213,8 +213,6 @@ void Board::castle(King *king, Rook *rook, const string &king_pos, const string 
     king->set_moved(true);
     rook->set_moved(true);
 
-    track_king(king, king_pos);
-
     undo = [=]()
     {
         this->move(new_king_pos, king_pos, false);

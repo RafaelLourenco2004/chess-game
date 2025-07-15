@@ -4,6 +4,31 @@
 
 bool GameController::move(const string &from, const string &to)
 {
+    bool moved = make_move(from, to);
+    if (moved)
+    {
+        if (rules.is_checked(WHITE) || rules.is_checked(BLACK))
+        {
+            if (rules.is_checked(WHITE))
+            {
+                checkmate = rules.is_checkmate(WHITE);
+                if (checkmate)
+                    winner = BLACK;
+            }
+            else
+            {
+                checkmate = rules.is_checkmate(BLACK);
+                if (checkmate)
+                    winner = WHITE;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+bool GameController::make_move(const string &from, const string &to)
+{
     if (!board.is_valid_square(from) || !board.is_valid_square(to))
         return false;
 

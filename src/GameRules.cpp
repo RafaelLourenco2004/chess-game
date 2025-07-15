@@ -27,6 +27,14 @@ GameRules::GameRules(Board &board) : white_checked{false}, black_checked{false},
     };
 }
 
+void GameRules::update_after_move(Color color)
+{
+    set_checked(color, false);
+    Color enemy = color == WHITE ? BLACK : WHITE;
+    bool is_enemy_checked = is_in_check(enemy);
+    set_checked(enemy, is_enemy_checked);
+}
+
 bool GameRules::is_in_check(Color color)
 {
     Color enemy = color == WHITE ? BLACK : WHITE;
@@ -35,7 +43,14 @@ bool GameRules::is_in_check(Color color)
     vector<pair<string, Piece *>> pieces = board.get_pieces(enemy);
     for (const auto &piece : pieces)
     {
-        if (can_capture(piece.second, piece.first, king_square, false))
+        bool can_take;
+        Pawn *pawn = dynamic_cast<Pawn *>(piece.second);
+        if (pawn != nullptr)
+            can_take = pawn->can_capture(piece.first, king_square);
+        else
+            can_take = piece.second->can_move(piece.first, king_square, can_piece_move);
+
+        if (can_take)
         {
             std::cout << "CHECK" << std::endl;
             return true;
@@ -44,7 +59,7 @@ bool GameRules::is_in_check(Color color)
     return false;
 }
 
-bool GameRules::can_move(const Piece &piece, const string &from, const string &to, bool simulate_check)
+bool GameRules::can_move(const Piece &piece, const string &from, const string &to)
 {
     bool is_valid = piece.can_move(from, to, can_piece_move);
     if (!is_valid)
@@ -52,12 +67,17 @@ bool GameRules::can_move(const Piece &piece, const string &from, const string &t
 
     board.move(from, to);
     bool is_check = is_in_check(piece.get_colour());
-    board.undo();
 
+    if (!is_check)
+    {
+        update_after_move(piece.get_colour());
+    }
+
+    board.undo();
     return !is_check;
 }
 
-bool GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to, bool simulate_check)
+bool GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to)
 {
     bool is_valid;
     Pawn *pawn = dynamic_cast<Pawn *>(piece);
@@ -69,17 +89,22 @@ bool GameRules::can_capture(Piece *piece, const std::string &from, const std::st
     if (!is_valid)
         return false;
 
-    if (!simulate_check)
-        return is_valid;
-
     board.take(from, to);
     bool is_check = is_in_check(piece->get_colour());
+
+    if (!is_check)
+    {
+        update_after_move(piece->get_colour());
+    }
     board.undo();
     return !is_check;
 }
 
-bool GameRules::can_castle(const King *king, const Rook *rook, const string &king_pos, const string &rook_pos)
+bool GameRules::can_castle(King *king, Rook *rook, const string &king_pos, const string &rook_pos)
 {
+    if (is_checked(king->get_colour()))
+        return false;
+
     if (king->has_moved() || rook->has_moved())
     {
         return false;
@@ -100,5 +125,18 @@ bool GameRules::can_castle(const King *king, const Rook *rook, const string &kin
             return false;
         }
     }
-    return true;
+
+    board.castle(king, rook, king_pos, rook_pos);
+    bool is_check = is_in_check(king->get_colour());
+    if (!is_check)
+    {
+        update_after_move(king->get_colour());
+    }
+    board.undo();
+    return !is_check;
+}
+
+bool GameRules::is_checkmate(Color)
+{
+    return false;
 }
