@@ -331,6 +331,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     <ClCompile Include="C:\Users\rafae\Downloads\chess_game\src\Rook.cpp" />
     <ClCompile Include="C:\Users\rafae\Downloads\chess_game\src\GameRules.cpp" />
     <ClCompile Include="C:\Users\rafae\Downloads\chess_game\src\GameController.cpp" />
+    <ClCompile Include="C:\Users\rafae\Downloads\chess_game\src\ClassicalSetup.cpp" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

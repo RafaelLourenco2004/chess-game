@@ -41,7 +41,7 @@ Game_Status move(GameController &controller)
 
 int main()
 {
-    GameController controller;
+    GameController controller(CLASSIC);
 
     controller.display();
 

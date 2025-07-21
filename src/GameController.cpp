@@ -3,6 +3,21 @@
 #include "Rook.h"
 #include "Pawn.h"
 
+unique_ptr<BoardSetup> GameController::make_setup(Setup setup)
+{
+    return make_unique<ClassicalSetup>();
+}
+
+GameController::GameController(Setup setup) : board{make_setup(setup)}, rules{board},
+                                              status{true, false, false, Winner::NONE}, turn{WHITE}, promotion_square{""}
+{
+}
+
+void GameController::change_turn()
+{
+    turn = turn == WHITE ? BLACK : WHITE;
+}
+
 Game_Status GameController::move(const string &from, const string &to)
 {
     if (status.promotion)
@@ -39,12 +54,14 @@ Game_Status GameController::move(const string &from, const string &to)
                 }
             }
         }
-    }
 
-    if (move.promote)
-    {
-        status.promotion = true;
-        promotion_square = to;
+        if (move.promote)
+        {
+            status.promotion = true;
+            promotion_square = to;
+        }
+
+        change_turn();
     }
 
     return status;
@@ -63,6 +80,10 @@ Move_Status GameController::make_move(const string &from, const string &to)
     {
         return move;
     }
+
+    Piece *piece = board.get_piece(from);
+    if (piece->get_colour() != turn)
+        return move;
 
     if (board.exists(to))
     {
@@ -131,7 +152,6 @@ Move_Status GameController::make_move(const string &from, const string &to)
     {
         board.move(from, to);
         return move;
-        // return true;
     }
 
     return {false, false};

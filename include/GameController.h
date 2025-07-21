@@ -2,6 +2,13 @@
 
 #include "Board.h"
 #include "GameRules.h"
+#include "BoardSetup.h"
+#include "ClassicalSetup.h"
+
+enum Setup
+{
+    CLASSIC
+};
 
 enum class Winner
 {
@@ -23,27 +30,20 @@ class GameController
 private:
     Board board;
     GameRules rules;
-
     Game_Status status;
+
+    Color turn;
     string promotion_square;
 
+    unique_ptr<BoardSetup> make_setup(Setup set_up);
     Move_Status make_move(const string &from, const string &to);
 
+    void change_turn();
+
 public:
-    GameController() : board{}, rules{board}, status{true, false, false, Winner::NONE}, promotion_square{""}
-    {
-    }
-    // GameController() : board{}, rules{board}, checkmate{false}
-    // {
-    // }
+    GameController(Setup set_up);
 
     Game_Status move(const string &from, const string &to);
-
-    // Winner get_winner() const
-    // {
-    //     return winner;
-    // }
-
     Game_Status promote(char type);
 
     void display();

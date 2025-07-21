@@ -7,6 +7,7 @@
 #include <memory>
 #include <functional>
 
+#include "BoardSetup.h"
 #include "Piece.h"
 #include "King.h"
 #include "Rook.h"
@@ -20,23 +21,21 @@ using std::vector;
 class Board
 {
 private:
-    const string BACK_ROW = "RHBQKBHR";
+    unique_ptr<BoardSetup> setup;
+
     const string COLUMNS = "ABCDEFGH";
 
-    string white_king_square;
-    string black_king_square;
+    string wk_square;
+    string bk_square;
 
     std::array<std::array<bool, 8>, 8> board = {};
     std::map<string, unique_ptr<Piece>> pieces;
 
     void board_init();
-    void set_row(int row, enum Color colour, bool back);
-    void set_piece(string pos, char type, enum Color colour);
-    void set_pieces();
     void track_king(Piece *piece, const string &square);
 
 public:
-    Board();
+    Board(unique_ptr<BoardSetup> set_up);
 
     std::function<void()> undo;
 
@@ -56,8 +55,8 @@ public:
     string get_king_location(Color color) const
     {
         if (color == WHITE)
-            return white_king_square;
-        return black_king_square;
+            return wk_square;
+        return bk_square;
     }
 
     template <typename T>

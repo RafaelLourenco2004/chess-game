@@ -15,57 +15,10 @@ void Board::board_init()
     }
 }
 
-void Board::set_piece(string pos, char type, enum Color colour)
-{
-    unique_ptr<Piece> piece;
-    switch (type)
-    {
-    case 'R':
-        piece = make_unique<Rook>('R', colour);
-        break;
-    case 'H':
-        piece = make_unique<Knight>('H', colour);
-        break;
-    case 'B':
-        piece = make_unique<Bishop>('B', colour);
-        break;
-    case 'Q':
-        piece = make_unique<Queen>('Q', colour);
-        break;
-    case 'K':
-        piece = make_unique<King>('K', colour);
-        break;
-    default:
-        break;
-    }
-    pieces[pos] = std::move(piece);
-}
-
-void Board::set_row(int row, enum Color colour, bool back)
-{
-    string pos;
-    for (int col = 0; col < 8; col++)
-    {
-        pos = COLUMNS.at(col) + std::to_string(row);
-        if (back)
-            set_piece(pos, BACK_ROW.at(col), colour);
-        else
-            pieces[pos] = make_unique<Pawn>('P', colour);
-    }
-}
-
-void Board::set_pieces()
-{
-    set_row(1, WHITE, true);
-    set_row(2, WHITE, false);
-    set_row(8, BLACK, true);
-    set_row(7, BLACK, false);
-}
-
-Board::Board() : undo{[] {}}, white_king_square{"E1"}, black_king_square{"E8"}
+Board::Board(unique_ptr<BoardSetup> setup) : setup{std::move(setup)}, undo{[] {}}, wk_square{"E1"}, bk_square{"E8"}
 {
     board_init();
-    set_pieces();
+    this->setup->set_up(pieces);
 }
 
 vector<pair<string, Piece *>> Board::get_pieces(Color color) const
@@ -85,9 +38,9 @@ void Board::track_king(Piece *piece, const string &square)
         return;
 
     if (piece->get_colour() == WHITE)
-        white_king_square = square;
+        wk_square = square;
     else
-        black_king_square = square;
+        bk_square = square;
 }
 
 bool Board::is_valid_square(const string &square) const

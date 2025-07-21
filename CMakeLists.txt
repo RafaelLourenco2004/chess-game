@@ -15,6 +15,7 @@ set(SRCS
     src/Rook.cpp
     src/GameRules.cpp
     src/GameController.cpp
+    src/ClassicalSetup.cpp
 )
 
 
