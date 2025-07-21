@@ -9,6 +9,19 @@
 class Piece;
 enum Color;
 
+struct Move_Status
+{
+    bool valid;
+    bool promote;
+};
+
+struct Move
+{
+    string from;
+    string to;
+    char piece_type;
+};
+
 class GameRules
 {
 private:
@@ -17,10 +30,15 @@ private:
 
     Board &board;
 
+    Move last_move;
+
+
     std::function<bool(const string &, const string &)> can_piece_move;
 
     bool is_in_check(Color turn);
-    void update_after_move(Color color); 
+    bool is_promotion(Piece *piece, const string &square);
+    void update_after_move(Color color);
+
 
     void set_checked(Color color, bool checked)
     {
@@ -34,9 +52,10 @@ public:
     // GameRules(Board &board) : white_checked{false}, black_checked{false}, board{board} {}
     GameRules(Board &board);
 
-    bool can_move(const Piece &piece, const std::string &from, const std::string &to);
-    bool can_capture(Piece *piece, const std::string &from, const std::string &to);
+    Move_Status can_move(Piece *piece, const std::string &from, const std::string &to);
+    Move_Status can_capture(Piece *piece, const std::string &from, const std::string &to);
     bool can_castle(King *king, Rook *piece_b, const string &king_pos, const string &rook_pos);
+    bool can_en_passant(const string &from, const string &to);
 
     bool is_checkmate(Color);
 

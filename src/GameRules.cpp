@@ -1,9 +1,11 @@
 #include <string>
+#include <cmath>
 
 #include "GameRules.h"
 #include "Pawn.h"
 #include "Board.h"
 
+using std::abs;
 using std::pair;
 using std::vector;
 
@@ -35,6 +37,13 @@ void GameRules::update_after_move(Color color)
     set_checked(enemy, is_enemy_checked);
 }
 
+bool GameRules::is_promotion(Piece *piece, const string &square)
+{
+    int col = square.at(1) - '0';
+    Color color = piece->get_colour();
+    return board.is_type<Pawn>(piece) && ((col == 8 && color == WHITE) || (col == 1 && color == BLACK));
+}
+
 bool GameRules::is_in_check(Color color)
 {
     Color enemy = color == WHITE ? BLACK : WHITE;
@@ -51,33 +60,38 @@ bool GameRules::is_in_check(Color color)
             can_take = piece.second->can_move(piece.first, king_square, can_piece_move);
 
         if (can_take)
-        {
-            std::cout << "CHECK" << std::endl;
             return true;
-        }
     }
     return false;
 }
 
-bool GameRules::can_move(const Piece &piece, const string &from, const string &to)
+Move_Status GameRules::can_move(Piece *piece, const string &from, const string &to)
 {
-    bool is_valid = piece.can_move(from, to, can_piece_move);
+    bool is_valid = piece->can_move(from, to, can_piece_move);
     if (!is_valid)
-        return false;
+        return {false, false};
 
     board.move(from, to);
-    bool is_check = is_in_check(piece.get_colour());
+    Color color = piece->get_colour();
+    bool is_check = is_in_check(color);
 
-    if (!is_check)
+    if (is_check)
     {
-        update_after_move(piece.get_colour());
+        board.undo();
+        return {false, false};
     }
 
+    update_after_move(color);
     board.undo();
-    return !is_check;
+
+    last_move = {from, to, piece->get_type()};
+
+    bool promote = is_promotion(piece, to);
+
+    return {true, promote};
 }
 
-bool GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to)
+Move_Status GameRules::can_capture(Piece *piece, const std::string &from, const std::string &to)
 {
     bool is_valid;
     Pawn *pawn = dynamic_cast<Pawn *>(piece);
@@ -87,17 +101,27 @@ bool GameRules::can_capture(Piece *piece, const std::string &from, const std::st
         is_valid = piece->can_move(from, to, can_piece_move);
 
     if (!is_valid)
-        return false;
+        return {false, false};
 
     board.take(from, to);
-    bool is_check = is_in_check(piece->get_colour());
 
-    if (!is_check)
+    Color color = piece->get_colour();
+    bool is_check = is_in_check(color);
+
+    if (is_check)
     {
-        update_after_move(piece->get_colour());
+        board.undo();
+        return {false, false};
     }
+
+    update_after_move(color);
     board.undo();
-    return !is_check;
+
+    last_move = {from, to, piece->get_type()};
+
+    bool promote = is_promotion(piece, to);
+
+    return {true, promote};
 }
 
 bool GameRules::can_castle(King *king, Rook *rook, const string &king_pos, const string &rook_pos)
@@ -131,7 +155,58 @@ bool GameRules::can_castle(King *king, Rook *rook, const string &king_pos, const
     if (!is_check)
     {
         update_after_move(king->get_colour());
+        last_move = {king_pos, rook_pos, king->get_type()};
     }
+    board.undo();
+    return !is_check;
+}
+
+bool GameRules::can_en_passant(const string &from, const string &to)
+{
+    Piece *taker = board.get_piece(from);
+    if (!board.is_type<Pawn>(taker))
+        return false;
+
+    Piece *target = board.get_piece(to);
+    if (!board.is_type<Pawn>(target))
+        return false;
+
+    int dest_row_offset = taker->get_colour() == WHITE ? 1 : -1;
+    char dest_row = (from.at(1)) + dest_row_offset;
+    string dest_square = string(1, from.at(0)) + string(1, dest_row);
+
+    if (board.is_square_occoupied(dest_square))
+        return false;
+
+    char from_row = from.at(1);
+    char to_row = to.at(1);
+
+    if (from_row != to_row)
+        return false;
+
+    char from_col = from.at(0);
+    char to_col = to.at(0);
+
+    if (abs(to_col - from_col) != 1)
+        return false;
+
+    if (last_move.piece_type != 'P')
+        return false;
+
+    string last_move_from = last_move.from;
+    string last_move_to = last_move.to;
+
+    if (abs(last_move_to.at(1) - last_move_from.at(1)) != 2)
+        return false;
+
+    board.en_passant(from, to);
+    bool is_check = is_in_check(taker->get_colour());
+    if (!is_check)
+    {
+        update_after_move(taker->get_colour());
+        last_move = {from, dest_square, 'P'};
+    }
+
     board.undo();
     return !is_check;
 }

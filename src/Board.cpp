@@ -222,6 +222,63 @@ void Board::castle(King *king, Rook *rook, const string &king_pos, const string 
     };
 }
 
+void Board::en_passant(const string &taker_square, const string &target_square)
+{
+    Piece *taker = get_piece(taker_square);
+    int dest_row_offset = taker->get_colour() == WHITE ? 1 : -1;
+    char dest_row = (taker_square.at(1)) + dest_row_offset;
+
+    string dest_square = string(1, taker_square.at(0)) + string(1, dest_row);
+    move(taker_square, dest_square, false);
+
+    auto target_it = pieces.find(target_square);
+    unique_ptr<Piece> target_ptr = std::move(target_it->second);
+    Piece *piece = target_ptr.release();
+    pieces.erase(target_it);
+
+    pair<int, int> target_loc = get_board_location(target_square);
+    board[target_loc.first][target_loc.second] = false;
+
+    undo = [=]()
+    {
+        this->move(dest_square, taker_square, false);
+        this->pieces[target_square] = std::unique_ptr<Piece>(piece);
+        this->board[target_loc.first][target_loc.second] = true;
+    };
+}
+
+bool Board::promote(string square, char type)
+{
+    string promotion_pieces = "RHBQ";
+    if (promotion_pieces.find(type) == -1)
+        return false;
+
+    auto piece = pieces.find(square);
+    Color color = piece->second->get_colour();
+
+    pieces.erase(piece);
+
+    switch (type)
+    {
+    case 'R':
+        pieces[square] = make_unique<Rook>(type, color);
+        break;
+    case 'H':
+        pieces[square] = make_unique<Knight>(type, color);
+        break;
+    case 'B':
+        pieces[square] = make_unique<Bishop>(type, color);
+        break;
+    case 'Q':
+        pieces[square] = make_unique<Queen>(type, color);
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 void Board::display()
 {
     string pos;

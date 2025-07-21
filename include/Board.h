@@ -47,6 +47,8 @@ public:
     void move(const string &from, const string &to, bool undo_enabled = true);
     void take(const string &from, const string &to);
     void castle(King *king, Rook *rook, const string &king_pos, const string &rook_pos);
+    void en_passant(const string &taker_square, const string &target_square);
+    bool promote(string square, char type);
     Piece *get_piece(const string &square);
     vector<pair<string, Piece *>> get_pieces(Color color) const;
     void display();

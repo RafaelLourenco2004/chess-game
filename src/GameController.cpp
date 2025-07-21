@@ -1,54 +1,96 @@
 #include "GameController.h"
 #include "King.h"
 #include "Rook.h"
+#include "Pawn.h"
 
-bool GameController::move(const string &from, const string &to)
+Game_Status GameController::move(const string &from, const string &to)
 {
-    bool moved = make_move(from, to);
-    if (moved)
+    if (status.promotion)
     {
-        if (rules.is_checked(WHITE) || rules.is_checked(BLACK))
+        status.is_move_valid = false;
+        return status;
+    }
+
+    Move_Status move = make_move(from, to);
+    status.is_move_valid = move.valid;
+    status.promotion = move.promote;
+
+    if (move.valid)
+    {
+        if (rules.is_checked(Color::WHITE) || rules.is_checked(Color::BLACK))
         {
-            if (rules.is_checked(WHITE))
+            bool checkmate;
+            if (rules.is_checked(Color::WHITE))
             {
-                checkmate = rules.is_checkmate(WHITE);
+                checkmate = rules.is_checkmate(Color::WHITE);
                 if (checkmate)
-                    winner = BLACK;
+                {
+                    status.end_game = true;
+                    status.winner = Winner::BLACK;
+                }
             }
             else
             {
-                checkmate = rules.is_checkmate(BLACK);
+                checkmate = rules.is_checkmate(Color::BLACK);
                 if (checkmate)
-                    winner = WHITE;
+                {
+                    status.end_game = true;
+                    status.winner = Winner::WHITE;
+                }
             }
         }
-        return true;
     }
-    return false;
+
+    if (move.promote)
+    {
+        status.promotion = true;
+        promotion_square = to;
+    }
+
+    return status;
 }
 
-bool GameController::make_move(const string &from, const string &to)
+Move_Status GameController::make_move(const string &from, const string &to)
 {
+    Move_Status move = {false, false};
     if (!board.is_valid_square(from) || !board.is_valid_square(to))
-        return false;
+        return move;
 
     if (from == to)
-        return false;
+        return move;
 
     if (!board.exists(from))
     {
-        return false;
+        return move;
     }
+
     if (board.exists(to))
     {
         Piece *a = board.get_piece(from);
         Piece *b = board.get_piece(to);
         if (a->get_colour() != b->get_colour())
         {
-            if (rules.can_capture(a, from, to))
+            if (board.is_type<Pawn>(a))
+            {
+                char from_row = from.at(1);
+                char to_row = to.at(1);
+
+                if (from_row == to_row)
+                {
+                    if (rules.can_en_passant(from, to))
+                    {
+                        board.en_passant(from, to);
+                        return {true, false};
+                    }
+                    return {false, false};
+                }
+            }
+
+            move = rules.can_capture(a, from, to);
+            if (move.valid)
             {
                 board.take(from, to);
-                return true;
+                return move;
             }
         }
         else
@@ -77,20 +119,29 @@ bool GameController::make_move(const string &from, const string &to)
                 if (rules.can_castle(king, rook, king_pos, rook_pos))
                 {
                     board.castle(king, rook, king_pos, rook_pos);
-                    return true;
+                    return {true, false};
                 }
             }
         }
-        return false;
+        return {false, false};
     }
 
-    if (rules.can_move(*board.get_piece(from), from, to))
+    move = rules.can_move(board.get_piece(from), from, to);
+    if (move.valid)
     {
         board.move(from, to);
-        return true;
+        return move;
+        // return true;
     }
 
-    return false;
+    return {false, false};
+}
+
+Game_Status GameController::promote(char type)
+{
+    bool success = board.promote(promotion_square, type);
+    status.promotion = !success;
+    return status;
 }
 
 void GameController::display()
